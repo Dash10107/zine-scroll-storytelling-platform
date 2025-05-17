@@ -235,7 +235,8 @@ export default function ZineLibraryPage() {
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           <Tabs defaultValue="all" className="w-full" onValueChange={handleCategoryChange}>
-            <TabsList className="grid grid-cols-4 mb-8 bg-black/40 backdrop-blur-sm border border-white/10 p-1 w-full max-w-2xl mx-auto">
+          <TabsList className="grid grid-cols-4 mb-12 bg-black/40 backdrop-blur-sm border border-white/10 p-1 w-full max-w-2xl mx-auto h-14">
+
               {categories.map((category) => (
                 <TabsTrigger
                   key={category.id}
