@@ -119,9 +119,9 @@ export function ZinePage({ page, index, isActive, scrollYProgress, totalPages }:
         {/* Page title with animated entrance */}
         {page.title && (
           <motion.div style={{ y: titleY }}>
-            <RevealText delay={0.2}>
+            {/* <RevealText delay={0.2}> */}
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-display mb-8 text-gradient">{page.title}</h2>
-            </RevealText>
+            {/* </RevealText> */}
           </motion.div>
         )}
 

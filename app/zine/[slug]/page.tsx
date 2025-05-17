@@ -13,6 +13,7 @@ import { PageTurnEffect } from "@/components/page-turn-effect"
 import { ArrowLeft, Home } from "lucide-react"
 import { ScrollProgressDots } from "@/components/scroll-progress-dots"
 import { MouseFollower } from "@/components/mouse-follower"
+import { LetterboxOverlay } from "@/components/letterbox-overlay"
 
 export default function ZinePage() {
   const router = useRouter()
@@ -26,64 +27,66 @@ export default function ZinePage() {
   const containerRef = useRef(null)
 
   useEffect(() => {
-    const currentSlug = Array.isArray(slug) ? slug[0] : String(slug);
-  
-    const zineData = zines.find((zine) => zine.slug === currentSlug);
-  
-    let loadingInterval: NodeJS.Timeout;
-    let timer: NodeJS.Timeout;
-  
-    // Start simulating loading progress
+    // Make sure slug is a string
+    const currentSlug = Array.isArray(slug) ? slug[0] : String(slug)
+
+    // Find the zine data based on the slug
+    const zineData = zines.find((zine) => zine.slug === currentSlug)
+
+    let loadingInterval
+
+    // Simulate loading progress with smoother increments
     loadingInterval = setInterval(() => {
       setLoadingProgress((prev) => {
-        const increment = Math.max(5, Math.min(15, (100 - prev) / 5));
-        const newProgress = prev + increment;
-        return newProgress >= 100 ? 100 : newProgress;
-      });
-    }, 120);
-  
-    // Simulate delay before showing content
-    timer = setTimeout(() => {
-      clearInterval(loadingInterval);
-      setLoadingProgress(100);
-  
+        // More controlled progression to avoid jumpy loading bar
+        const increment = Math.max(5, Math.min(15, 100 - prev) / 5)
+        const newProgress = prev + increment
+        return newProgress >= 100 ? 100 : newProgress
+      })
+    }, 120)
+
+    // Simulate loading delay for a smoother experience
+    const timer = setTimeout(() => {
+      clearInterval(loadingInterval)
+      setLoadingProgress(100)
+
       if (zineData) {
-        setCurrentZine(zineData as any); // Cast as needed for TS
+        setCurrentZine(zineData)
+        // Add a small delay after reaching 100% before showing content
         setTimeout(() => {
-          setIsLoading(false);
-        }, 300);
+          setIsLoading(false)
+        }, 300)
       } else {
-        setError("Zine not found");
-        setIsLoading(false);
+        // Set error state instead of redirecting
+        setError("Zine not found")
+        setIsLoading(false)
       }
-    }, 1800);
-  
-    // Cleanup
+    }, 1800) // Slightly longer loading for better UX
+
     return () => {
-      clearTimeout(timer);
-      clearInterval(loadingInterval);
-    };
-  }, [slug, zines]);
-  
+      clearTimeout(timer)
+      clearInterval(loadingInterval)
+    }
+  }, [slug, router])
 
   const handlePageTurn = () => {
     setIsPageTurning(true)
-    
+
     setTimeout(() => {
       setIsPageTurning(false)
     }, 1000)
   }
 
   const handlePageChange = (index) => {
-    if (index < 0 || (currentZine && currentZine.pages && index >= currentZine.pages.length)) {
+    if (index < 0 || (currentZine && currentZine.pages && index >= currentZine.pages.length + 1)) {
       console.warn("Page index out of bounds:", index)
       return
     }
-    
+
     setActivePageIndex(index)
 
     // Get the target page element
-    const pages = containerRef.current?.querySelectorAll("section")
+    const pages = document.querySelectorAll(".zine-page, .outro-page")
     if (pages && pages[index]) {
       // Scroll to the target page
       pages[index].scrollIntoView({ behavior: "smooth", block: "start" })
@@ -104,7 +107,7 @@ export default function ZinePage() {
           }}
           transition={{
             duration: 2.5,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
         >
@@ -161,10 +164,7 @@ export default function ZinePage() {
           transition={{ duration: 0.8, delay: 0.4 }}
         >
           <Link href="/zine/library">
-            <Button
-              variant="outline"
-              className="gap-2 border-white/20 hover:bg-white/10"
-            >
+            <Button variant="outline" className="gap-2 border-white/20 hover:bg-white/10">
               Browse Zine Library
             </Button>
           </Link>
@@ -187,17 +187,23 @@ export default function ZinePage() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative min-h-screen"
+        className="relative min-h-screen bg-black"
         ref={containerRef}
       >
+        {/* Film Grain Effect */}
+        <div className="film-grain fixed inset-0 z-10 pointer-events-none" />
+
+        {/* Vignette Effect */}
+        <div className="vignette fixed inset-0 z-10 pointer-events-none" />
+
+        {/* Cinematic Letterbox Effect */}
+        <LetterboxOverlay />
+
         <ProgressBar />
-        {currentZine.pages && (
-          <TableOfContents 
-            pages={currentZine.pages} 
-            onPageSelect={handlePageChange} 
-          />
-        )}
-        <MouseFollower />
+
+        {currentZine.pages && <TableOfContents pages={currentZine.pages} onPageSelect={handlePageChange} />}
+
+        {/* <MouseFollower /> */}
 
         {/* Scroll Progress Dots */}
         {currentZine.pages && (
@@ -215,7 +221,7 @@ export default function ZinePage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
         >
-          <Link href="/library">
+          <Link href="/zine/library">
             <Button
               variant="ghost"
               size="sm"
@@ -227,14 +233,15 @@ export default function ZinePage() {
           </Link>
         </motion.div>
 
-        <PageTurnEffect isActive={isPageTurning}>
-          <ZineViewer
+        <ZineViewer
             zine={currentZine}
             onPageChange={handlePageTurn}
             onActivePageChange={setActivePageIndex}
             activePageIndex={activePageIndex}
           />
-        </PageTurnEffect>
+        {/* <PageTurnEffect isActive={isPageTurning}>
+          
+        </PageTurnEffect> */}
       </motion.div>
     </AnimatePresence>
   )

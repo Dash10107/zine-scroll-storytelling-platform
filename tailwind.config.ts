@@ -19,6 +19,12 @@ const config = {
       },
     },
     extend: {
+      zIndex: {
+        9996: "9996",
+        9997: "9997",
+        9998: "9998",
+        9999: "9999",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
