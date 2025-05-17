@@ -90,6 +90,7 @@ export default function LandingPage() {
         // Use a low volume during initial play attempt to be less intrusive
         if (videoRef.current) {
           videoRef.current.volume = 0.1
+          videoRef.current.playbackRate = 0.25
         }
 
         await videoRef.current.play()
@@ -223,9 +224,10 @@ export default function LandingPage() {
                 muted
                 loop
                 playsInline
+
                 poster="https://images.unsplash.com/photo-1557682250-33bd709cbe85?q=80&w=2029&auto=format&fit=crop"
               >
-                <source src="/videos/ambient-bg.mp4" type="video/mp4" />
+                <source src="/videos/vide.mp4" type="video/mp4" />
               </video>
             )
           ) : (
