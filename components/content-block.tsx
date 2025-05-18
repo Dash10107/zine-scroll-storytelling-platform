@@ -1,18 +1,46 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { RevealText } from "./reveal-text"
+import { useRef } from "react"
+import { motion, useInView } from "framer-motion"
+import { AnimatedText } from "./animated-text"
 
 interface ContentBlockProps {
   content: string
   isInView: boolean
   layout?: string
-  isActive?: boolean
 }
 
-export function ContentBlock({ content, isInView, layout = "default", isActive = false }: ContentBlockProps) {
+export function ContentBlock({ content, isInView, layout = "default" }: ContentBlockProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isContentInView = useInView(containerRef, { once: false, amount: 0.2 })
+  const shouldAnimate = isContentInView && isInView
+
   // Split content into paragraphs
-  const paragraphs = content.split("\n").filter((p) => p.trim() !== "")
+  const paragraphs = content.split("\n\n").filter(Boolean)
+
+  // Animation variants for staggered content
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const paragraphVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  }
 
   // Determine text alignment based on layout
   const getTextAlignment = () => {
@@ -34,12 +62,33 @@ export function ContentBlock({ content, isInView, layout = "default", isActive =
     return ""
   }
 
+  // Determine if we should use a special layout
+  const useSpecialLayout = layout === "magazine-style" || layout === "photo-essay"
+
   return (
-    <motion.div className={`text-lg md:text-xl leading-relaxed mb-8 space-y-4 ${getTextAlignment()} ${getMaxWidth()}`}>
-      {paragraphs.map((paragraph, idx) => (
-        <RevealText key={idx} delay={0.3 + idx * 0.1} isActive={isActive}>
-          <p className="text-white drop-shadow-lg bg-black/70 backdrop-blur-sm p-4 rounded-lg">{paragraph}</p>
-        </RevealText>
+    <motion.div
+      ref={containerRef}
+      className={`prose prose-invert max-w-none ${getTextAlignment()} ${getMaxWidth()} ${
+        useSpecialLayout ? "magazine-style" : ""
+      }`}
+      variants={containerVariants}
+      initial="hidden"
+      animate={shouldAnimate ? "visible" : "hidden"}
+    >
+      {paragraphs.map((paragraph, index) => (
+        <motion.div key={index} variants={paragraphVariants}>
+          {index === 0 && layout === "magazine-style" ? (
+            <p className="first-paragraph" dangerouslySetInnerHTML={{ __html: paragraph }} />
+          ) : (
+            <AnimatedText
+              text={paragraph}
+              isInView={shouldAnimate}
+              delay={0.1 * index}
+              type="line"
+              staggerChildren={0.01}
+            />
+          )}
+        </motion.div>
       ))}
     </motion.div>
   )

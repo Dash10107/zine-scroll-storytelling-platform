@@ -4,7 +4,6 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { List, X, ChevronRight } from "lucide-react"
 
-
 interface TableOfContentsProps {
   pages: any[]
   onPageSelect?: (index: number) => void
@@ -13,16 +12,13 @@ interface TableOfContentsProps {
 export function TableOfContents({ pages, onPageSelect }: TableOfContentsProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-
   const toggleTOC = () => {
     setIsOpen(!isOpen)
-   
   }
 
   const handlePageClick = (index: number) => {
     // Close the TOC
     setIsOpen(false)
-
 
     // Call the page select handler if provided
     if (onPageSelect) {
@@ -50,14 +46,14 @@ export function TableOfContents({ pages, onPageSelect }: TableOfContentsProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full max-w-sm bg-background/95 backdrop-blur-md border-l border-border z-40 overflow-auto"
+            className="fixed top-0 right-0 h-full w-full max-w-sm bg-black/95 backdrop-blur-md border-l border-white/10 z-40 overflow-auto"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold font-display mb-2">Contents</h2>
+                <h2 className="text-2xl font-bold font-playfair mb-2">Contents</h2>
                 <motion.button
                   onClick={toggleTOC}
-                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Close table of contents"
@@ -75,8 +71,8 @@ export function TableOfContents({ pages, onPageSelect }: TableOfContentsProps) {
                     transition={{ delay: index * 0.05 }}
                   >
                     <motion.button
-                      className="w-full text-left p-4 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 group"
-                      onClick={() => handlePageClick(index)}
+                      className="w-full text-left p-4 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-3 group"
+                      onClick={() => handlePageClick(index + 1)}
                       whileHover={{ x: 5 }}
                       transition={{ duration: 0.2 }}
                     >
@@ -97,8 +93,8 @@ export function TableOfContents({ pages, onPageSelect }: TableOfContentsProps) {
                   transition={{ delay: pages.length * 0.05 }}
                 >
                   <motion.button
-                    className="w-full text-left p-4 rounded-lg hover:bg-muted transition-colors flex items-center gap-3 group"
-                    onClick={() => handlePageClick(pages.length)}
+                    className="w-full text-left p-4 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-3 group"
+                    onClick={() => handlePageClick(pages.length + 1)}
                     whileHover={{ x: 5 }}
                     transition={{ duration: 0.2 }}
                   >

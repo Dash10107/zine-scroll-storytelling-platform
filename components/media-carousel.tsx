@@ -1,11 +1,9 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { motion } from "framer-motion"
-import Image from "next/image"
+import { motion, AnimatePresence, useAnimation } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ImageHoverEffect } from "./image-hover-effect"
 
 interface MediaCarouselProps {
   images: string[]
@@ -14,155 +12,153 @@ interface MediaCarouselProps {
 
 export function MediaCarousel({ images, isInView }: MediaCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStartX, setDragStartX] = useState(0)
-  const [dragOffset, setDragOffset] = useState(0)
+  const [direction, setDirection] = useState(0)
+  const controls = useAnimation()
   const carouselRef = useRef<HTMLDivElement>(null)
+  const [isHovering, setIsHovering] = useState(false)
+  const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length)
-  }
-
-  const prevSlide = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length)
-  }
-
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsDragging(true)
-
-    // Get the starting position
-    if ("touches" in e) {
-      setDragStartX(e.touches[0].clientX)
-    } else {
-      setDragStartX(e.clientX)
-    }
-
-    setDragOffset(0)
-  }
-
-  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging) return
-
-    // Calculate drag distance
-    let currentX
-    if ("touches" in e) {
-      currentX = e.touches[0].clientX
-    } else {
-      currentX = e.clientX
-    }
-
-    const offset = currentX - dragStartX
-    setDragOffset(offset)
-  }
-
-  const handleDragEnd = () => {
-    if (!isDragging) return
-
-    // Determine if we should change slides based on drag distance
-    if (Math.abs(dragOffset) > 100) {
-      if (dragOffset > 0) {
-        prevSlide()
-      } else {
-        nextSlide()
-      }
-    }
-
-    setIsDragging(false)
-    setDragOffset(0)
-  }
-
-  // Auto-advance carousel
+  // Reset animation when images change
   useEffect(() => {
-    if (!isInView) return
+    controls.set({ opacity: 0, scale: 0.95 })
+    controls.start({ opacity: 1, scale: 1, transition: { duration: 0.5 } })
+  }, [images, controls])
 
-    const interval = setInterval(() => {
-      if (!isDragging) {
-        nextSlide()
+  // Handle autoplay
+  useEffect(() => {
+    if (!isInView || isHovering) {
+      if (autoplayTimerRef.current) {
+        clearTimeout(autoplayTimerRef.current)
       }
+      return
+    }
+
+    autoplayTimerRef.current = setTimeout(() => {
+      handleNext()
     }, 5000)
 
-    return () => clearInterval(interval)
-  }, [isInView, isDragging])
+    return () => {
+      if (autoplayTimerRef.current) {
+        clearTimeout(autoplayTimerRef.current)
+      }
+    }
+  }, [currentIndex, isInView, isHovering])
 
-  // Calculate transform based on current index and drag offset
-  const getTransform = () => {
-    const baseTransform = -currentIndex * 100
-    const dragPercent = (dragOffset / (carouselRef.current?.offsetWidth || 1)) * 100
-    return `translateX(${baseTransform + dragPercent}%)`
+  const handlePrev = () => {
+    setDirection(-1)
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  }
+
+  const handleNext = () => {
+    setDirection(1)
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+  }
+
+  // Animation variants
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? "100%" : "-100%",
+      opacity: 0,
+      scale: 0.95,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.5 },
+        scale: { duration: 0.5 },
+      },
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? "-100%" : "100%",
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.5 },
+        scale: { duration: 0.5 },
+      },
+    }),
   }
 
   return (
     <motion.div
-      className="w-full max-w-4xl mx-auto my-12 relative"
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, delay: 0.6 }}
+      ref={carouselRef}
+      className="relative w-full max-w-4xl mx-auto my-8 overflow-hidden rounded-lg"
+      animate={controls}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
-      <div
-        ref={carouselRef}
-        className="overflow-hidden rounded-lg shadow-2xl"
-        onMouseDown={handleDragStart}
-        onMouseMove={handleDragMove}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onTouchStart={handleDragStart}
-        onTouchMove={handleDragMove}
-        onTouchEnd={handleDragEnd}
-      >
-        <div
-          className="flex transition-transform duration-300 ease-out"
-          style={{
-            transform: getTransform(),
-            cursor: isDragging ? "grabbing" : "grab",
-          }}
+      <AnimatePresence initial={false} custom={direction} mode="wait">
+        <motion.div
+          key={currentIndex}
+          custom={direction}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          className="w-full"
         >
-          {images.map((image, index) => (
-            <div key={index} className="w-full flex-shrink-0">
-              <div className="relative aspect-[16/9]">
-                <Image
-                  src={image || "/placeholder.svg"}
-                  alt={`Gallery image ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+          <ImageHoverEffect
+            src={images[currentIndex] || "/placeholder.svg"}
+            alt={`Gallery image ${currentIndex + 1}`}
+            width={1200}
+            height={800}
+            caption={`Image ${currentIndex + 1} of ${images.length}`}
+          />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Navigation buttons */}
-      <button
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-        onClick={prevSlide}
-        aria-label="Previous image"
+      <motion.button
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full"
+        onClick={handlePrev}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovering ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <ChevronLeft size={24} />
-      </button>
+        <ChevronLeft size={20} />
+      </motion.button>
 
-      <button
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-        onClick={nextSlide}
-        aria-label="Next image"
+      <motion.button
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full"
+        onClick={handleNext}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovering ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <ChevronRight size={24} />
-      </button>
+        <ChevronRight size={20} />
+      </motion.button>
 
       {/* Dots indicator */}
-      <div className="flex justify-center mt-4 gap-2">
+      <motion.div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
         {images.map((_, index) => (
-          <button
+          <motion.button
             key={index}
-            className={`w-2 h-2 rounded-full transition-all ${
-              index === currentIndex ? "bg-primary w-4" : "bg-white/50"
-            }`}
+            className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-primary" : "bg-white/50"}`}
             onClick={() => {
+              setDirection(index > currentIndex ? 1 : -1)
               setCurrentIndex(index)
             }}
-            aria-label={`Go to image ${index + 1}`}
+            whileHover={{ scale: 1.5 }}
+            animate={{
+              scale: index === currentIndex ? 1.5 : 1,
+              backgroundColor: index === currentIndex ? "rgb(236, 72, 153)" : "rgba(255, 255, 255, 0.5)",
+            }}
           />
         ))}
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

@@ -536,7 +536,7 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <MagneticButton>
-                <Link href="/zine/library">
+                <Link href="/library">
                   <Button size="lg" className="gap-2 group" onClick={() => playSound("click")}>
                     <span>Browse Library</span>
                     <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" size={16} />
@@ -588,7 +588,7 @@ export default function LandingPage() {
                     </li>
                     <li>
                       <Link
-                        href="/zine/library"
+                        href="/library"
                         className="text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
                         Library

@@ -1,205 +1,145 @@
 "use client"
 
-import { useRef, useEffect, useState, useCallback } from "react"
-import { useScroll, useMotionValueEvent, motion } from "framer-motion"
-import { ZinePage } from "@/components/zine-page"
-import { OutroPage } from "@/components/outro-page"
-import { LetterboxOverlay } from "./letterbox-overlay"
+import { useEffect, useRef, useState, useCallback } from "react"
+import type { MotionValue } from "framer-motion"
+import { SensoryPage } from "@/components/sensory-page"
+import { ZineIntro } from "@/components/zine-intro"
+import { ZineOutro } from "@/components/zine-outro"
 
-export function ZineViewer({ zine, onPageChange, onActivePageChange, activePageIndex = 0 }) {
-  const containerRef = useRef(null)
-  const [scrollSnapping, setScrollSnapping] = useState(false)
-  const [prevActiveIndex, setPrevActiveIndex] = useState(0)
-  const [isScrolling, setIsScrolling] = useState(false)
-  const [scrollTimeout, setScrollTimeout] = useState(null)
+
+interface ZineViewerProps {
+  zine: any
+  scrollProgress: MotionValue<number>
+  activePageIndex: number
+  setActivePageIndex: (index: number) => void
+  scrollVelocity?: number
+  theme?: string
+}
+
+export function ZineViewer({
+  zine,
+  scrollProgress,
+  activePageIndex,
+  setActivePageIndex,
+  scrollVelocity = 0,
+  theme = "default",
+}: ZineViewerProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const pageRefs = useRef<Array<HTMLElement | null>>([])
+
+  const [hasInteracted, setHasInteracted] = useState(false)
+  const [isReversing, setIsReversing] = useState(false)
+  const [lastScrollTop, setLastScrollTop] = useState(0)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // Safety check to ensure zine and zine.pages exist
-  const pages = zine?.pages || []
-  const totalPages = pages.length
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  })
-
-  // Debounced scroll handler for better performance
-  const debouncedScrollHandler = useCallback(
-    (value) => {
-      // Skip processing if zine data isn't properly loaded
-      if (!zine || !pages.length) return
-
-      // Calculate the active page index based on scroll progress
-      const newIndex = Math.min(
-        Math.floor(value * (totalPages + 1)), // +1 for outro page
-        totalPages,
-      )
-
-      if (newIndex !== activePageIndex) {
-        setPrevActiveIndex(activePageIndex)
-
-        // Update parent component with new active page
-        if (onActivePageChange) {
-          onActivePageChange(newIndex)
-        }
-
-        // Trigger page turn effect when changing pages
-        if (onPageChange && !isInitialLoad) {
-          onPageChange()
-        }
-      }
-
-      // Track scrolling state
-      if (!isScrolling) {
-        setIsScrolling(true)
-
-        // Clear any existing timeout
-        if (scrollTimeout) {
-          clearTimeout(scrollTimeout)
-        }
-
-        // Set a new timeout
-        const timeout = setTimeout(() => {
-          setIsScrolling(false)
-        }, 150)
-
-        setScrollTimeout(timeout)
-      }
-
-      // After first scroll event, we're no longer in initial load
-      if (isInitialLoad) {
-        setIsInitialLoad(false)
-      }
-    },
-    [
-      activePageIndex,
-      isInitialLoad,
-      isScrolling,
-      onActivePageChange,
-      onPageChange,
-      scrollSnapping,
-      scrollTimeout,
-      totalPages,
-      zine,
-      pages.length,
-    ],
-  )
-
-  // Use useMotionValueEvent for more reliable scroll tracking
-  useMotionValueEvent(scrollYProgress, "change", debouncedScrollHandler)
-
-  // Add smooth scrolling behavior
+  // Set up page refs
   useEffect(() => {
-    // Enable smooth scrolling
-    document.documentElement.style.scrollBehavior = "smooth"
+    pageRefs.current = Array(zine.pages.length + 2).fill(null)
 
-    return () => {
-      // Reset scroll behavior when component unmounts
-      document.documentElement.style.scrollBehavior = ""
+    // Mark initial load as complete after a short delay
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false)
+    }, 1000)
 
-      // Clear any existing timeout
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
-    }
-  }, [scrollTimeout])
+    return () => clearTimeout(timer)
+  }, [zine.pages.length])
 
-  // Add keyboard navigation
-  useEffect(() => {
-    // Skip if zine data isn't properly loaded
-    if (!zine || !pages.length) return
+  // Handle scroll to detect active page and scroll direction
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return
 
-    const handleKeyDown = (e) => {
-      if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
-        // Navigate to next page
-        if (activePageIndex < totalPages) {
-          e.preventDefault() // Prevent default scroll behavior
-          if (onActivePageChange) {
-            onActivePageChange(activePageIndex + 1)
-          }
-          if (onPageChange) {
-            onPageChange()
-          }
-        }
-      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
-        // Navigate to previous page
-        if (activePageIndex > 0) {
-          e.preventDefault() // Prevent default scroll behavior
-          if (onActivePageChange) {
-            onActivePageChange(activePageIndex - 1)
-          }
-          if (onPageChange) {
-            onPageChange()
-          }
-        }
-      } else if (e.key === "Home") {
-        // Navigate to first page
-        e.preventDefault()
-        if (onActivePageChange) {
-          onActivePageChange(0)
-        }
-        if (onPageChange) {
-          onPageChange()
-        }
-      } else if (e.key === "End") {
-        // Navigate to last page
-        e.preventDefault()
-        if (onActivePageChange) {
-          onActivePageChange(totalPages)
-        }
-        if (onPageChange) {
-          onPageChange()
-        }
+    const scrollTop = window.scrollY || document.documentElement.scrollTop
+
+    // Detect scroll direction
+    const isScrollingUp = scrollTop < lastScrollTop
+    if (isScrollingUp !== isReversing) {
+      setIsReversing(isScrollingUp)
+
+      // Trigger easter egg when scrolling backward
+      if (isScrollingUp && !hasInteracted && !isInitialLoad) {
+        setHasInteracted(true)
       }
     }
 
+    setLastScrollTop(scrollTop)
+
+    // Find active page based on scroll position
+    const viewportHeight = window.innerHeight
+    const viewportCenter = scrollTop + viewportHeight / 2
+
+    let newActiveIndex = 0
+    pageRefs.current.forEach((ref, index) => {
+      if (!ref) return
+
+      const rect = ref.getBoundingClientRect()
+      const offsetTop = rect.top + scrollTop
+      const offsetBottom = offsetTop + rect.height
+
+      if (viewportCenter >= offsetTop && viewportCenter < offsetBottom) {
+        newActiveIndex = index
+      }
+    })
+
+    if (newActiveIndex !== activePageIndex) {
+      setActivePageIndex(newActiveIndex)
+      if (!isInitialLoad) {
+      }
+    }
+  }, [activePageIndex, setActivePageIndex, lastScrollTop, isReversing, hasInteracted, isInitialLoad])
+
+  // Set up scroll event listener
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [handleScroll])
+
+  // Keyboard navigation for up/down arrows
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        setActivePageIndex((prev) => Math.min(prev + 1, zine.pages.length + 1))
+      }
+      if (e.key === "ArrowUp") {
+        setActivePageIndex((prev) => Math.max(prev - 1, 0))
+      }
+    }
     window.addEventListener("keydown", handleKeyDown)
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [activePageIndex, onActivePageChange, onPageChange, totalPages, zine, pages.length])
-
-  // If zine isn't loaded properly, show a loading placeholder
-  if (!zine || !pages.length) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl opacity-50">Loading zine content...</div>
-      </div>
-    )
-  }
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [setActivePageIndex, zine.pages.length])
 
   return (
-    <>
-      {/* Cinematic Letterbox Effect */}
-      <LetterboxOverlay />
+    <div ref={containerRef} className="relative">
+      {/* Intro Page */}
+      <ZineIntro
+        zine={zine}
+        scrollProgress={scrollProgress}
+        ref={(el) => (pageRefs.current[0] = el)}
+        isActive={activePageIndex === 0}
+      />
 
-      {/* Initial fade-in animation for the entire zine */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 0.3 }}
-        ref={containerRef}
-        className="relative"
-      >
-        {/* Render all zine pages */}
-        {pages.map((page, index) => (
-          <ZinePage
-            key={`page-${index}`}
-            page={page}
-            index={index}
-            isActive={index === activePageIndex}
-            scrollYProgress={scrollYProgress}
-            totalPages={totalPages}
-          />
-        ))}
-
-        {/* Outro page */}
-        <OutroPage 
-          zine={zine} 
-          isActive={activePageIndex === totalPages} 
-          scrollYProgress={scrollYProgress} 
+      {/* Content Pages */}
+      {zine.pages.map((page: any, index: number) => (
+        <SensoryPage
+          key={index}
+          page={page}
+          index={index}
+          scrollProgress={scrollProgress}
+          totalPages={zine.pages.length}
+          isActive={activePageIndex === index + 1}
+          isReversing={isReversing}
+          ref={(el) => (pageRefs.current[index + 1] = el)}
+          scrollVelocity={scrollVelocity}
+          theme={theme}
         />
-      </motion.div>
-    </>
+      ))}
+
+      {/* Outro Page */}
+      <ZineOutro
+        zine={zine}
+        scrollProgress={scrollProgress}
+        ref={(el) => (pageRefs.current[zine.pages.length + 1] = el)}
+        isActive={activePageIndex === zine.pages.length + 1}
+      />
+    </div>
   )
 }
