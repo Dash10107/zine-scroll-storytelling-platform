@@ -7,9 +7,10 @@ import { zines } from "@/data/zines"
 import { LetterboxOverlay } from "@/components/letterbox-overlay"
 import { ZineViewer } from "@/components/zine-viewer"
 import { TableOfContents } from "@/components/table-of-contents"
+
 import { ProgressBar } from "@/components/progress-bar"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Home } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, Home } from "lucide-react"
 import Link from "next/link"
 import { LoadingScreen } from "@/components/loading-screen"
 
@@ -19,6 +20,7 @@ export default function ZinePage() {
   const [zine, setZine] = useState<any | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activePageIndex, setActivePageIndex] = useState(0)
+  const [currentNavPage, setCurrentNavPage] = useState(1) // 1-based index for navigation
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Add scroll velocity state
@@ -40,7 +42,7 @@ export default function ZinePage() {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [slug, ])
+  }, [slug])
 
   // Add scroll velocity detection
   useEffect(() => {
@@ -61,8 +63,6 @@ export default function ZinePage() {
     } else {
       setZineTheme("default")
     }
-
-
   }, [zine, zineTheme])
 
   // Add scroll velocity detection
@@ -107,6 +107,24 @@ export default function ZinePage() {
     }
   }
 
+  const totalPages = zine ? zine.pages.length + 1 : 0
+
+  const goUp = () => {
+    if (currentNavPage > 1) {
+      const newPage = currentNavPage - 1
+      setCurrentNavPage(newPage)
+      document.getElementById(`page-${newPage}`)?.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
+  const goDown = () => {
+    if (currentNavPage < totalPages) {
+      const newPage = currentNavPage + 1
+      setCurrentNavPage(newPage)
+      document.getElementById(`page-${newPage}`)?.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
   // If zine not found
   if (!isLoading && !zine) {
     return (
@@ -119,6 +137,7 @@ export default function ZinePage() {
       </div>
     )
   }
+
 
   return (
     <>
@@ -134,7 +153,6 @@ export default function ZinePage() {
 
         {/* Cinematic Letterbox Effect */}
         <LetterboxOverlay />
-
 
         {/* Progress Bar */}
         <ProgressBar />
@@ -170,6 +188,28 @@ export default function ZinePage() {
 
         {/* Table of Contents */}
         {zine && <TableOfContents pages={zine.pages} onPageSelect={handlePageSelect} />}
+
+        {/* Page Navigation Buttons Up and Down*/}
+        {zine && (
+
+    <div className="fixed right-6 bottom-10 z-50 flex flex-col items-center gap-2">
+      <button
+        onClick={goUp}
+
+        className="p-2 rounded-full bg-primary/20 hover:bg-primary/40 transition-colors disabled:opacity-50"
+        aria-label="Previous page"
+      >
+        <ChevronUp size={24} />
+      </button>
+      <button
+        onClick={goDown}
+        className="p-2 rounded-full bg-primary/20 hover:bg-primary/40 transition-colors disabled:opacity-50"
+        aria-label="Next page"
+      >
+        <ChevronDown size={24} />
+      </button>
+    </div>
+        )}
 
         {/* Main Zine Content */}
         {zine && (
