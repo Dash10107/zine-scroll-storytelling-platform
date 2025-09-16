@@ -99,17 +99,6 @@ npm  run dev
 ```
 
 
-)
-
-🤝 Credits
-Built with love by a frontend team that cares about:
-
-## 🙌 Built With Intention By
-
-[**VirusHacks**](https://github.com/VirusHacks)  
-📬 Reach me at: **virustechhacks@gmail.com**
-
----
 
 ## 🌐 Live Demo
 
@@ -128,3 +117,4 @@ If you believe in meaningful design and scroll-based storytelling:
 
 > Zinima is not just a site.  
 > It’s a scrollable memory. A cinematic rhythm. A new way to feel digital stories.
+
