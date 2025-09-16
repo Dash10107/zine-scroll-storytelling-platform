@@ -111,10 +111,11 @@ npm  run dev
 If you believe in meaningful design and scroll-based storytelling:  
 **Star this repo** and help others discover Zinima.
 
-[👉 Star on GitHub](https://github.com/VirusHacks/Zinima)
+[👉 Star on GitHub](https://github.com/Dash10107/Zinima)
 
 ---
 
 > Zinima is not just a site.  
 > It’s a scrollable memory. A cinematic rhythm. A new way to feel digital stories.
+
 
