@@ -29,10 +29,6 @@ Zinima transforms static digital content into **cinematic, scroll-driven experie
 
 ### 🌟 [**View Live Demo →**](https://zinima-scroll-storytelling.vercel.app)
 
-<div align="center">
-  <img src="https://via.placeholder.com/800x400/1a1a1a/ffffff?text=🎬+Interactive+Landing+Page" alt="Zinima Landing Page" width="48%" />
-  <img src="https://via.placeholder.com/800x400/1a1a1a/ffffff?text=📖+Zine+Viewer+Interface" alt="Zine Viewer" width="48%" />
-</div>
 
 ## 🛠️ Tech Stack
 
@@ -48,8 +44,8 @@ Zinima transforms static digital content into **cinematic, scroll-driven experie
 
 ```bash
 # Clone the repository
-git clone https://github.com/Dash10107/Zinima.git
-cd Zinima
+git clone https://github.com/Dash10107/zine-scroll-storytelling-platform.git
+cd zine-scroll-storytelling-platform
 
 # Install dependencies
 npm install --legacy-peer-deps
@@ -68,21 +64,6 @@ npm run dev
 - **Educational Content** - Interactive learning experiences
 - **Event Documentation** - Document hackathons, conferences, workshops
 
-## 🏗️ Project Architecture
-
-```
-zinima/
-├── app/                 # Next.js 14 App Router
-├── components/          # Reusable UI components
-│   ├── cursor/         # Custom cursor implementation
-│   ├── animations/     # Framer Motion components
-│   └── zine/          # Zine viewer components
-├── data/               # Zine content and metadata
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions
-├── public/             # Static assets
-└── styles/             # Global styles & Tailwind config
-```
 
 ## 📈 Performance Metrics
 
@@ -102,22 +83,6 @@ Multiple layers of content move at different speeds, creating a sense of depth a
 ### Responsive Zine Reader
 The zine viewer adapts beautifully to any screen size while maintaining the cinematic experience across desktop, tablet, and mobile devices.
 
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-1. 🍴 Fork the repository
-2. 🌿 Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. 💾 Commit your changes (`git commit -m 'Add amazing feature'`)
-4. 📤 Push to the branch (`git push origin feature/amazing-feature`)
-5. 🔄 Open a Pull Request
-
-### Areas for Contribution
-- 🎨 New zine templates and layouts
-- 🔧 Performance optimizations  
-- 📱 Mobile experience improvements
-- 🎵 Enhanced audio integration
-- 🌐 Accessibility improvements
 
 ## 📊 Roadmap
 
@@ -156,3 +121,4 @@ If you find Zinima useful, please give it a ⭐ star on GitHub! It helps others 
 *"Turning digital stories into cinematic experiences, one scroll at a time."*
 
 </div>
+
