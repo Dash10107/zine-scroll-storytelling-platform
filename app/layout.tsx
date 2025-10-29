@@ -3,32 +3,19 @@ import type { Metadata } from "next"
 import { Inter, Playfair_Display, Space_Grotesk, Cormorant } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-
 import CustomCursor from "@/components/custom-cursor"
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-})
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-})
-
-const cormorant = Cormorant({
-  subsets: ["latin"],
-  variable: "--font-cormorant",
-})
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" })
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
+const cormorant = Cormorant({ subsets: ["latin"], variable: "--font-cormorant" })
 
 export const metadata: Metadata = {
   title: "Zinima | Interactive Digital Zine Viewer",
   description: "An immersive, scroll-driven storytelling platform for flipping through digital zines.",
+  icons: {
+    icon: "/favicon.ico", // ✅ this line tells Next.js to use this favicon
+  },
   openGraph: {
     title: "Zinima | Interactive Digital Zine Viewer",
     description: "An immersive, scroll-driven storytelling platform for flipping through digital zines.",
@@ -51,7 +38,7 @@ export const metadata: Metadata = {
     description: "An immersive, scroll-driven storytelling platform for flipping through digital zines.",
     images: ["https://zinima.vercel.app/og-image.jpg"],
   },
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -61,14 +48,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* ✅ Head tag explicitly adding favicon */}
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body
         className={`${inter.variable} ${playfair.variable} ${spaceGrotesk.variable} ${cormorant.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          
-            <CustomCursor />
-            {children}
-      
+          <CustomCursor />
+          {children}
         </ThemeProvider>
       </body>
     </html>
